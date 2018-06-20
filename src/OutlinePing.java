@@ -312,7 +312,7 @@ public class OutlinePing extends JFrame {
 		JLabel hostNameLabel = new JLabel("Hostname: ");
 		JTextField hostNameTextField = new JTextField(15);
 		JButton upButton = new JButton("IP");
-		upButton.setIcon(new ImageIcon("C:/Users/Administrator/Desktop/upbutton.png"));
+		upButton.setIcon(new ImageIcon("C:/Users/Administrator/Documents/NetworkExample/PingExample/src/upbutton.png"));
 		JComboBox optionComboBox = new JComboBox();
 		optionComboBox.addItem("Netmask");
 		optionComboBox.addItem("/24");
@@ -324,10 +324,10 @@ public class OutlinePing extends JFrame {
 		optionComboBox.addItem("255...0.0");
 		optionComboBox.addItem("255...0.0.0");
 		JButton startButton = new JButton(" Start");
-		startButton.setIcon(new ImageIcon("C:/Users/Administrator/Desktop/starticon.png"));
+		startButton.setIcon(new ImageIcon("C:/Users/Administrator/Documents/NetworkExample/PingExample/src/starticon.png"));
 		JButton MenuButton = new JButton();
 		JButton stopButton = new JButton(" stop");
-		stopButton.setIcon(new ImageIcon("C:/Users/Administrator/Desktop/stopicon.png"));
+		stopButton.setIcon(new ImageIcon("C:/Users/Administrator/Documents/NetworkExample/PingExample/src/stopicon.png"));
 		MenuButton.setIcon(new ImageIcon("C:/Users/Administrator/Documents/NetworkExample/PingExample/src/menuicon.png"));
 		
 		hostNameLabel.setFont(myFont);
