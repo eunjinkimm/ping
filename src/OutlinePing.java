@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -29,6 +30,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -39,8 +41,30 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.SoftBevelBorder;
 
 public class OutlinePing extends JFrame {
+	private String[] titles;
+	private Object[][] stats;
+	private int fixedIPStartlast;
+	private int fixedIPEndlast;
 
 	public OutlinePing() {
+		super("Network Scanner");
+
+		// myIP and myHostname
+		String myIP;
+		String myHostname;
+
+		InetAddress ia = null;
+		try {
+			ia = InetAddress.getLocalHost();
+		} catch (UnknownHostException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		myIP = ia.getHostAddress();
+		myHostname = ia.getHostName();
+
+		String fixedIP = myIP.substring(0, myIP.lastIndexOf(".") + 1);
+
 		// Menu Begin
 		JMenuBar menubar = new JMenuBar();
 		
@@ -206,53 +230,45 @@ public class OutlinePing extends JFrame {
 			}
 		});
 		
-		addCurrentAction.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				JFrame jf = new JFrame("Add a favorite");
-				setLayout(new FlowLayout());
-				JPanel jp = new JPanel();
-				JButton jb1 = new JButton("OK");
-				JButton jb2 = new JButton("Cancle");
-				jp.add(jb1);
-				jp.add(jb2);
-				jf.add(jp, BorderLayout.SOUTH);
-				jf.setLocation(100, 150);
-				jf.setSize(500, 200);
-				jf.setVisible(true);
-			}
-		});
 		// Mune End
 		
 		// Status bar Begin
 		
-		JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		statusPanel.setBorder(new BevelBorder(BevelBorder.LOWERED));
-		add(statusPanel, BorderLayout.SOUTH);
-		JLabel readyLabel = new JLabel("Ready");
-		readyLabel.setPreferredSize(new Dimension(250, 16));
-		readyLabel.setBorder(new EtchedBorder(EtchedBorder.RAISED));
-		JLabel displayLabel = new JLabel("Display: All");
-		displayLabel.setPreferredSize(new Dimension(160, 16));
-		displayLabel.setBorder(new EtchedBorder(EtchedBorder.RAISED));
-		JLabel threadLabel = new JLabel("Thread: 0");
-		threadLabel.setPreferredSize(new Dimension(180, 16));
-		threadLabel.setBorder(new EtchedBorder(EtchedBorder.RAISED));
-		
-		statusPanel.add(readyLabel);
-		statusPanel.add(displayLabel);
-		statusPanel.add(threadLabel);
+		JPanel statusmainPanel = new JPanel();
+		JPanel statusPanel1 = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+		statusPanel1.setPreferredSize(new Dimension(160, 20));
+		JPanel statusPanel2 = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+		statusPanel2.setPreferredSize(new Dimension(60, 20));
+		JPanel statusPanel3 = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+		statusPanel3.setPreferredSize(new Dimension(60, 20));
+		statusPanel1.setBorder(new BevelBorder(BevelBorder.LOWERED));
+		statusPanel2.setBorder(new BevelBorder(BevelBorder.LOWERED));
+		statusPanel3.setBorder(new BevelBorder(BevelBorder.LOWERED));
+		getContentPane().add(statusmainPanel, BorderLayout.SOUTH);
+
+		JLabel currentStatusLabel = new JLabel("Ready");
+		JLabel displayStatusLabel = new JLabel("Display: All");
+		JLabel threadStatusLabel = new JLabel("Threads:0");
+		statusPanel1.add(currentStatusLabel);
+		statusPanel2.add(displayStatusLabel);
+		statusPanel3.add(threadStatusLabel);
+		statusmainPanel.setLayout(new BoxLayout(statusmainPanel, BoxLayout.X_AXIS));
+		statusmainPanel.add(statusPanel1);
+		statusmainPanel.add(statusPanel2);
+		statusmainPanel.add(statusPanel3);
+
+		JProgressBar progressBar = new JProgressBar();
+		progressBar.setPreferredSize(new Dimension(150, 20));
+		statusmainPanel.add(progressBar);
+		progressBar.setIndeterminate(false);
 		
 		// Status bar End
 		
 		// Table begin
 		
-		String[] titles = new String[] {
-			"IP", "Ping", "Hostname", "TTL", "Ports [0+]"	
-		};
-		Object[][] stats = initTable();
-		
+		titles = new String[] { "IP", "Ping", "TTL", "Hostname", "Ports" };
+		stats = initTable();
+
 		JTable jTable = new JTable(stats, titles);
 		
 		JScrollPane sp = new JScrollPane(jTable);
@@ -295,7 +311,8 @@ public class OutlinePing extends JFrame {
 		
 		JLabel hostNameLabel = new JLabel("Hostname: ");
 		JTextField hostNameTextField = new JTextField(15);
-		JButton upButton = new JButton("IP¡è");
+		JButton upButton = new JButton("IP");
+		upButton.setIcon(new ImageIcon("C:/Users/Administrator/Desktop/upbutton.png"));
 		JComboBox optionComboBox = new JComboBox();
 		optionComboBox.addItem("Netmask");
 		optionComboBox.addItem("/24");
@@ -306,8 +323,11 @@ public class OutlinePing extends JFrame {
 		optionComboBox.addItem("255...0");
 		optionComboBox.addItem("255...0.0");
 		optionComboBox.addItem("255...0.0.0");
-		JButton startButton = new JButton("¢º Start");
+		JButton startButton = new JButton(" Start");
+		startButton.setIcon(new ImageIcon("C:/Users/Administrator/Desktop/starticon.png"));
 		JButton MenuButton = new JButton();
+		JButton stopButton = new JButton(" stop");
+		stopButton.setIcon(new ImageIcon("C:/Users/Administrator/Desktop/stopicon.png"));
 		MenuButton.setIcon(new ImageIcon("C:/Users/Administrator/Documents/NetworkExample/PingExample/src/menuicon.png"));
 		
 		hostNameLabel.setFont(myFont);
@@ -315,6 +335,7 @@ public class OutlinePing extends JFrame {
 		upButton.setPreferredSize(new Dimension(42, 30));
 		optionComboBox.setPreferredSize(new Dimension(150, 30));
 		startButton.setPreferredSize(new Dimension(90, 30));
+		stopButton.setPreferredSize(new Dimension(90, 30));
 		MenuButton.setFont(myFont);
 		MenuButton.setPreferredSize(new Dimension(30, 30));
 		
@@ -334,89 +355,142 @@ public class OutlinePing extends JFrame {
 		// Toolbar End
 		
 		String myIp = null;
-		String myHostname = null;
+		String myHostname1 = null;
 		try {
-			InetAddress ia = InetAddress.getLocalHost();
-			myIp = ia.getHostAddress();
-			myHostname = ia.getHostName();
+			InetAddress ia1 = InetAddress.getLocalHost();
+			myIp = ia1.getHostAddress();
+			myHostname1 = ia1.getHostName();
 		} catch (Exception e) {
 		}
 		String fixedIp = myIp.substring(0, myIp.lastIndexOf(".") + 1);
 		rangeStartTextField.setText(fixedIp + "1");
 		rangeEndTextField.setText(fixedIp + "254");
-		hostNameTextField.setText(myHostname);
+		hostNameTextField.setText(myHostname1);
 		
 		setSize(640, 640);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setVisible(true);
 		
+
 		startButton.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-				pinging[] pg = new pinging[254];
-				// add
-				for (int i = 0; i <= 253; i++) {
-					pg[i] = new pinging(fixedIp+(i+1));
-					pg[i].start();
-				}
-				
-				for (int i = 0; i <= 253; i++) {
-					Object[] msg = pg[i].getMsg();
-					stats[i][0] = msg[0];
-					if(msg[1] != null) {
-						stats[i][1] = msg[1];
-					} else {
-						stats[i][1] = "[n/a]";
-					}
-					if(msg[2] != null) {
-						stats[i][2] = msg[2];
-					} else {
-						stats[i][2] = "[n/s]";
-					}
-					if(msg[3] != null) {
-						stats[i][3] = msg[3];
-					} else {
-						stats[i][3] = "[n/s]";
-					}
-					
-				}
-				for(int i = 0 ; i <= 253 ; i++) {
-					Object[] msg = pg[i].getMsg();
-					if(msg[1] != null || msg[2] != null || msg[3] != null) {
-						final ExecutorService es = Executors.newFixedThreadPool(20);
-						final String ip = (String) stats[i][0];
-						final int timeout = 10;
-						final List<Future<ScanResult>> futures = new ArrayList<>();
-						//65535 , 1024
-						for (int port = 1; port <=1024; port++) {
-							futures.add(portIsOpen(es, ip, port, timeout));
-						}
-						try {
-							es.awaitTermination(200L, TimeUnit.MILLISECONDS);
-							int openPorts = 0;
-							String openPortNumber = "";
-							for (final Future<ScanResult> f : futures) {
-								if (f.get().isOpen()) {
-									openPorts++;
-									openPortNumber= openPortNumber + f.get().getPort() + ", ";
-								}
-							}
-							if(openPortNumber == ""){
-								stats[i][4] = "[n/s]";
-							} else{
-								stats[i][4] = openPortNumber.substring(0, openPortNumber.length() - 2);
-							} 
-						} catch (Exception e2) {
-							// TODO: handle exception
-						}
-					}
-				}
+				fixedIPStartlast = Integer
+						.parseInt(rangeStartTextField.getText().substring(rangeStartTextField.getText().lastIndexOf(".") + 1));
+				fixedIPEndlast = Integer.parseInt(rangeEndTextField.getText().substring(rangeEndTextField.getText().lastIndexOf(".") + 1));
+				System.out.println(fixedIPStartlast + "," + fixedIPEndlast);
+				progressBar.setIndeterminate(true);
+				toolbar2.remove(startButton);
+				toolbar2.add(stopButton);
+				toolbar2.add(MenuButton);
+				currentStatusLabel.setText("Running");
 				jTable.repaint();
+				statusmainPanel.repaint();
+
+				new Thread(() -> {
+					pinging[] pg = new pinging[fixedIPEndlast];
+					for (int i = 0; i <= 253; i++) {
+						pg[i] = new pinging(fixedIp+(i+1));
+						pg[i].start();
+					}
+					while (Thread.activeCount() > 3) {
+						try {
+							Thread.sleep(200);
+							jTable.repaint();
+							threadStatusLabel.setText("Threads: " + (Thread.activeCount()-3));
+						} catch (InterruptedException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+					}
+					for (int i = 0; i <= 253; i++) {
+						Object[] msg = pg[i].getMsg();
+						stats[i][0] = msg[0];
+						if(msg[1] != null) {
+							stats[i][1] = msg[1];
+						} else {
+							stats[i][1] = "[n/a]";
+						}
+						if(msg[2] != null) {
+							stats[i][2] = msg[2];
+						} else {
+							stats[i][2] = "[n/s]";
+						}
+						if(msg[3] != null) {
+							stats[i][3] = msg[3];
+						} else {
+							stats[i][3] = "[n/s]";
+						}
+						
+					}
+					for(int i = 0 ; i <= 253 ; i++) {
+						Object[] msg = pg[i].getMsg();
+						if(msg[1] != null || msg[2] != null || msg[3] != null) {
+							final ExecutorService es = Executors.newFixedThreadPool(20);
+							final String ip = (String) stats[i][0];
+							final int timeout = 10;
+							final List<Future<ScanResult>> futures = new ArrayList<>();
+							//65535 , 1024
+							for (int port = 1; port <=1024; port++) {
+								futures.add(portIsOpen(es, ip, port, timeout));
+							}
+							try {
+								es.awaitTermination(200L, TimeUnit.MILLISECONDS);
+								int openPorts = 0;
+								String openPortNumber = "";
+								for (final Future<ScanResult> f : futures) {
+									if (f.get().isOpen()) {
+										openPorts++;
+										openPortNumber= openPortNumber + f.get().getPort() + ", ";
+									}
+								}
+								if(openPortNumber == ""){
+									stats[i][4] = "[n/s]";
+								} else{
+									stats[i][4] = openPortNumber.substring(0, openPortNumber.length() - 2);
+								} 
+							} catch (Exception e2) {
+								// TODO: handle exception
+							}
+						}
+					}
+					jTable.repaint();
+
+				progressBar.setIndeterminate(false);
+				toolbar2.remove(stopButton);
+				toolbar2.add(startButton);
+				currentStatusLabel.setText("Ready");
+				jTable.repaint();
+				}).start();
 			}
 		});
-	}
+	
+
+	stopButton.addActionListener(new ActionListener() {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			// TODO Auto-generated method stub
+			if (e.getSource() == stopButton) {
+				progressBar.setIndeterminate(false);
+				toolbar2.remove(stopButton);
+				toolbar2.add(startButton);
+				toolbar2.add(MenuButton);
+				currentStatusLabel.setText("Ready");
+				jTable.repaint();
+			}
+		}
+	});
+	rangeStartTextField.setText(fixedIP + 0);
+	fixedIPStartlast = Integer.parseInt(rangeStartTextField.getText().substring(rangeStartTextField.getText().lastIndexOf(".") + 1));
+	rangeEndTextField.setText(fixedIP + 254);
+	fixedIPEndlast = Integer.parseInt(rangeEndTextField.getText().substring(rangeEndTextField.getText().lastIndexOf(".") + 1));
+	hostNameTextField.setText(myHostname);
+	setSize(700, 700);
+	setDefaultCloseOperation(EXIT_ON_CLOSE);
+	setVisible(true);
+}
 	
 	public static Future<ScanResult> portIsOpen(final ExecutorService es, final String ip, final int port, final int timeout){
 		return es.submit(new Callable<ScanResult>() {
@@ -440,6 +514,7 @@ public class OutlinePing extends JFrame {
 		Object[][] result = new Object[254][5];
 		return result;
 	}
+	
 	
 	public static void main(String[] args) {
 
