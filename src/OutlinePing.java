@@ -4,6 +4,7 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -15,7 +16,10 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.ExtendedSSLSession;
+import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -149,6 +153,76 @@ public class OutlinePing extends JFrame {
 			}
 		});
 		
+		FAQAction.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					Runtime.getRuntime().exec("cmd.exe /c start chrome www.angryip.org/faq/");
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				
+			}
+		});
+		
+		officialWebsiteAction.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					Runtime.getRuntime().exec("cmd.exe /c start chrome www.angryip.org");
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		});
+		
+		reportAnIssueAction.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					Runtime.getRuntime().exec("cmd.exe /c start chrome www.github.com/angryip/ipscan/issues");
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		});
+		
+		pluginsAction.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					Runtime.getRuntime().exec("cmd.exe /c start chrome www.angryip.org/contribute/plugins.html");
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		});
+		
+		addCurrentAction.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JFrame jf = new JFrame("Add a favorite");
+				setLayout(new FlowLayout());
+				JPanel jp = new JPanel();
+				JButton jb1 = new JButton("OK");
+				JButton jb2 = new JButton("Cancle");
+				jp.add(jb1);
+				jp.add(jb2);
+				jf.add(jp, BorderLayout.SOUTH);
+				jf.setLocation(100, 150);
+				jf.setSize(500, 200);
+				jf.setVisible(true);
+			}
+		});
 		// Mune End
 		
 		// Status bar Begin
@@ -202,7 +276,7 @@ public class OutlinePing extends JFrame {
 		IPRangeComboBox.addItem("Random");
 		IPRangeComboBox.addItem("Text File");
 		JButton settingButton = new JButton();
-		settingButton.setIcon(new ImageIcon("C:\\Users\\Administrator\\Desktop\\seticon.png"));
+		settingButton.setIcon(new ImageIcon("C:/Users/Administrator/Documents/NetworkExample/PingExample/src/seticon.png"));
 		
 		rangeStartLabel.setFont(myFont);
 		rangeStartLabel.setPreferredSize(new Dimension(80, 30));
@@ -234,7 +308,7 @@ public class OutlinePing extends JFrame {
 		optionComboBox.addItem("255...0.0.0");
 		JButton startButton = new JButton("¢º Start");
 		JButton MenuButton = new JButton();
-		MenuButton.setIcon(new ImageIcon("C:\\Users\\Administrator\\Desktop\\menuicon.png"));
+		MenuButton.setIcon(new ImageIcon("C:/Users/Administrator/Documents/NetworkExample/PingExample/src/menuicon.png"));
 		
 		hostNameLabel.setFont(myFont);
 		hostNameTextField.setPreferredSize(new Dimension(90, 30));
@@ -292,32 +366,75 @@ public class OutlinePing extends JFrame {
 					Object[] msg = pg[i].getMsg();
 					stats[i][0] = msg[0];
 					if(msg[1] != null) {
-					stats[i][1] = msg[1];
+						stats[i][1] = msg[1];
 					} else {
 						stats[i][1] = "[n/a]";
 					}
 					if(msg[2] != null) {
-					stats[i][2] = msg[2];
+						stats[i][2] = msg[2];
 					} else {
 						stats[i][2] = "[n/s]";
 					}
 					if(msg[3] != null) {
-					stats[i][3] = msg[3];
+						stats[i][3] = msg[3];
 					} else {
 						stats[i][3] = "[n/s]";
 					}
+					
 				}
-				// msg[1] != null || msg[2] != null || msg[3] != null
-				// portscan.
-				// scan value == null => stats[i][4] = "[n/s]"
-				// scan value != null => assgin valuet stats[i][4] 
-				
+				for(int i = 0 ; i <= 253 ; i++) {
+					Object[] msg = pg[i].getMsg();
+					if(msg[1] != null || msg[2] != null || msg[3] != null) {
+						final ExecutorService es = Executors.newFixedThreadPool(20);
+						final String ip = (String) stats[i][0];
+						final int timeout = 10;
+						final List<Future<ScanResult>> futures = new ArrayList<>();
+						//65535 , 1024
+						for (int port = 1; port <=1024; port++) {
+							futures.add(portIsOpen(es, ip, port, timeout));
+						}
+						try {
+							es.awaitTermination(200L, TimeUnit.MILLISECONDS);
+							int openPorts = 0;
+							String openPortNumber = "";
+							for (final Future<ScanResult> f : futures) {
+								if (f.get().isOpen()) {
+									openPorts++;
+									openPortNumber= openPortNumber + f.get().getPort() + ", ";
+								}
+							}
+							if(openPortNumber == ""){
+								stats[i][4] = "[n/s]";
+							} else{
+								stats[i][4] = openPortNumber.substring(0, openPortNumber.length() - 2);
+							} 
+						} catch (Exception e2) {
+							// TODO: handle exception
+						}
+					}
+				}
 				jTable.repaint();
 			}
 		});
 	}
 	
-	
+	public static Future<ScanResult> portIsOpen(final ExecutorService es, final String ip, final int port, final int timeout){
+		return es.submit(new Callable<ScanResult>() {
+
+			@Override
+			public ScanResult call() {
+				try {
+					Socket socket = new Socket();
+					socket.connect(new InetSocketAddress(ip, port), timeout);
+					socket.close();
+					return new ScanResult(port, true);
+				} catch (IOException e) {
+					return new ScanResult(port, false);
+				}
+			}
+			
+		});
+	}
 	
 	public Object[][] initTable(){
 		Object[][] result = new Object[254][5];
