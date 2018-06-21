@@ -269,7 +269,7 @@ public class OutlinePing extends JFrame {
 		
 		// Table begin
 		
-		titles = new String[] { "IP", "Ping", "TTL", "Hostname", "Ports" };
+		titles = new String[] { "IP", "Ping", "Hostname", "TTL", "Ports" };
 		stats = initTable();
 
 		JTable jTable = new JTable(stats, titles);
