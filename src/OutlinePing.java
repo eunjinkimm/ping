@@ -40,11 +40,14 @@ import javax.swing.border.BevelBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.SoftBevelBorder;
 
+import org.omg.CORBA.PUBLIC_MEMBER;
+
 public class OutlinePing extends JFrame {
 	private String[] titles;
 	private Object[][] stats;
 	private int fixedIPStartlast;
 	private int fixedIPEndlast;
+	JProgressBar progressBar;
 
 	public OutlinePing() {
 		super("Network Scanner");
@@ -257,7 +260,7 @@ public class OutlinePing extends JFrame {
 		statusmainPanel.add(statusPanel2);
 		statusmainPanel.add(statusPanel3);
 
-		JProgressBar progressBar = new JProgressBar();
+		progressBar = new JProgressBar(0, 100);
 		progressBar.setPreferredSize(new Dimension(150, 20));
 		statusmainPanel.add(progressBar);
 		progressBar.setIndeterminate(false);
@@ -373,20 +376,23 @@ public class OutlinePing extends JFrame {
 		
 
 		startButton.addActionListener(new ActionListener() {
-
+			int value = 0;
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				
 				fixedIPStartlast = Integer
 						.parseInt(rangeStartTextField.getText().substring(rangeStartTextField.getText().lastIndexOf(".") + 1));
 				fixedIPEndlast = Integer.parseInt(rangeEndTextField.getText().substring(rangeEndTextField.getText().lastIndexOf(".") + 1));
-				System.out.println(fixedIPStartlast + "," + fixedIPEndlast);
-				progressBar.setIndeterminate(true);
+				//System.out.println(fixedIPStartlast + "," + fixedIPEndlast);
+				//progressBar.setValue(value);
 				toolbar2.remove(startButton);
 				toolbar2.add(stopButton);
 				toolbar2.add(MenuButton);
 				currentStatusLabel.setText("Running");
 				jTable.repaint();
 				statusmainPanel.repaint();
+				
+				thread(0, 10);
 
 				new Thread(() -> {
 					pinging[] pg = new pinging[fixedIPEndlast];
@@ -394,16 +400,19 @@ public class OutlinePing extends JFrame {
 						pg[i] = new pinging(fixedIp+(i+1));
 						pg[i].start();
 					}
+					thread(10, 20);
 					while (Thread.activeCount() > 3) {
 						try {
 							Thread.sleep(200);
 							jTable.repaint();
 							threadStatusLabel.setText("Threads: " + (Thread.activeCount()-3));
+							if(Thread.activeCount()%2 == 1) thread(20, 50);
 						} catch (InterruptedException e1) {
 							// TODO Auto-generated catch block
 							e1.printStackTrace();
 						}
 					}
+					thread(20, 40);
 					for (int i = 0; i <= 253; i++) {
 						Object[] msg = pg[i].getMsg();
 						stats[i][0] = msg[0];
@@ -422,14 +431,14 @@ public class OutlinePing extends JFrame {
 						} else {
 							stats[i][3] = "[n/s]";
 						}
-						
+						if(i == 150) thread(40, 70);
 					}
 					for(int i = 0 ; i <= 253 ; i++) {
 						Object[] msg = pg[i].getMsg();
 						if(msg[1] != null || msg[2] != null || msg[3] != null) {
 							final ExecutorService es = Executors.newFixedThreadPool(20);
 							final String ip = (String) stats[i][0];
-							final int timeout = 10;
+							final int timeout = 15;
 							final List<Future<ScanResult>> futures = new ArrayList<>();
 							//65535 , 1024
 							for (int port = 1; port <=1024; port++) {
@@ -445,43 +454,50 @@ public class OutlinePing extends JFrame {
 										openPortNumber= openPortNumber + f.get().getPort() + ", ";
 									}
 								}
+								thread(70, 85);
 								if(openPortNumber == ""){
 									stats[i][4] = "[n/s]";
 								} else{
 									stats[i][4] = openPortNumber.substring(0, openPortNumber.length() - 2);
 								} 
+								if (i%6 == 1) {
+									value += 1;
+									progressBar.setValue(value);
+								}
 							} catch (Exception e2) {
 								// TODO: handle exception
 							}
+							thread(85,100);
 						}
 					}
 					jTable.repaint();
-
-				progressBar.setIndeterminate(false);
-				toolbar2.remove(stopButton);
-				toolbar2.add(startButton);
-				currentStatusLabel.setText("Ready");
-				jTable.repaint();
-				}).start();
+					progressBar.setValue(0);
+					toolbar2.remove(stopButton);
+					toolbar2.add(startButton);
+					toolbar2.add(MenuButton);
+					currentStatusLabel.setText("Ready");
+					jTable.repaint();
+					}).start();
 			}
 		});
 	
 
-	stopButton.addActionListener(new ActionListener() {
+		stopButton.addActionListener(new ActionListener() {
 
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			// TODO Auto-generated method stub
-			if (e.getSource() == stopButton) {
-				progressBar.setIndeterminate(false);
-				toolbar2.remove(stopButton);
-				toolbar2.add(startButton);
-				toolbar2.add(MenuButton);
-				currentStatusLabel.setText("Ready");
-				jTable.repaint();
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (e.getSource() == stopButton) {
+					progressBar.setIndeterminate(false);
+					toolbar2.remove(stopButton);
+					toolbar2.add(startButton);
+					toolbar2.add(MenuButton);
+					currentStatusLabel.setText("Ready");
+					jTable.repaint();
+				}
 			}
-		}
-	});
+		});
+	
 	rangeStartTextField.setText(fixedIP + 0);
 	fixedIPStartlast = Integer.parseInt(rangeStartTextField.getText().substring(rangeStartTextField.getText().lastIndexOf(".") + 1));
 	rangeEndTextField.setText(fixedIP + 254);
@@ -508,6 +524,24 @@ public class OutlinePing extends JFrame {
 			}
 			
 		});
+	}
+	
+	public void thread(int x, int y) {
+		Thread t = new Thread(new Runnable() {
+		      public void run() {
+		        progressBar.setVisible(true);
+		      }
+		    });
+		    t.start();
+		    for (int i = x; i <= y; i++) {
+		      progressBar.setValue(i);
+		        try {
+					Thread.sleep(25);
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+		    }
 	}
 	
 	public Object[][] initTable(){
